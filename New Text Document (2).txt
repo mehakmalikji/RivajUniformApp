@@ -1,0 +1,156 @@
+package com.rivaj.uniform;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.LinearLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import android.widget.EditText;
+import android.text.InputType;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+public class MainActivity extends AppCompatActivity {
+
+    LinearLayout mainLayout;
+    DatabaseReference db;
+    TextView summaryBox;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mainLayout = new LinearLayout(this);
+        mainLayout.setOrientation(LinearLayout.VERTICAL);
+
+        // Firebase reference
+        db = FirebaseDatabase.getInstance().getReference("inventory");
+
+        // Summary Box (Top)
+        summaryBox = new TextView(this);
+        summaryBox.setText("Total Pieces: 0   |   Total Value: Rs. 0");
+        summaryBox.setTextSize(18f);
+        mainLayout.addView(summaryBox);
+
+        // Add All Categories
+        addCategory("Black Pant", new String[]{"22","24","26","28","30","32","34","36","38"});
+        addCategory("Waist", new String[]{"28","29","30","31","32"});
+        addCategory("Blue Shirt", new String[]{"20","22","24","26","28","30","32"});
+        addCategory("Denzy Pant", new String[]{"22","24","26","28","30","32","34","36","38","40"});
+        addCategory("Denzy White Shirt", new String[]{"18","20","22","24","26","28","30","32"});
+        addCategory("Hajvery Grey Pant", new String[]{"22","24","26","28","30","32","34","36","38"});
+        addCategory("Hajvery White Shirt", new String[]{"20","22","24","26","28","30","32"});
+        addCategory("Sabz Pant Nobel", new String[]{"22","24","26","28","30","32","34","36"});
+        addCategory("Local Sabz Pant", new String[]{"36"});
+
+        // Realtime Listener to auto update Summary
+        db.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                int totalPieces = 0;
+                int totalValue = 0;
+
+                for (DataSnapshot category : snapshot.getChildren()) {
+                    for (DataSnapshot size : category.getChildren()) {
+                        String qStr = size.child("quantity").getValue(String.class);
+                        String pStr = size.child("price").getValue(String.class);
+
+                        int qty = (qStr != null && !qStr.isEmpty()) ? Integer.parseInt(qStr) : 0;
+                        int price = (pStr != null && !pStr.isEmpty()) ? Integer.parseInt(pStr) : 0;
+
+                        totalPieces += qty;
+                        totalValue += qty * price;
+                    }
+                }
+
+                summaryBox.setText("Total Pieces: " + totalPieces + "   |   Total Value: Rs. " + totalValue);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+            }
+        });
+
+        setContentView(mainLayout);
+    }
+
+    private void addCategory(String name, String[] sizes) {
+        TextView title = new TextView(this);
+        title.setText("\n" + name);
+        title.setTextSize(20f);
+        mainLayout.addView(title);
+
+        TableLayout table = new TableLayout(this);
+        table.setStretchAllColumns(true);
+
+        // Header Row
+        TableRow header = new TableRow(this);
+        header.addView(makeText("Size"));
+        header.addView(makeText("Quantity"));
+        header.addView(makeText("Price"));
+        table.addView(header);
+
+        for (String size : sizes) {
+            TableRow row = new TableRow(this);
+
+            // Size (non-editable)
+            row.addView(makeText(size));
+
+            // Quantity (editable)
+            EditText qty = new EditText(this);
+            qty.setInputType(InputType.TYPE_CLASS_NUMBER);
+            row.addView(qty);
+
+            // Price (editable)
+            EditText price = new EditText(this);
+            price.setInputType(InputType.TYPE_CLASS_NUMBER);
+            row.addView(price);
+
+            // Save to Firebase on change
+            qty.setOnFocusChangeListener((v, hasFocus) -> {
+                if (!hasFocus) {
+                    db.child(name).child(size).child("quantity").setValue(qty.getText().toString());
+                }
+            });
+
+            price.setOnFocusChangeListener((v, hasFocus) -> {
+                if (!hasFocus) {
+                    db.child(name).child(size).child("price").setValue(price.getText().toString());
+                }
+            });
+
+            table.addView(row);
+        }
+
+        // Add 5 empty rows for future data
+        for (int i = 1; i <= 5; i++) {
+            TableRow row = new TableRow(this);
+            row.addView(makeText(""));
+
+            EditText qty = new EditText(this);
+            qty.setHint("Qty");
+            qty.setInputType(InputType.TYPE_CLASS_NUMBER);
+            row.addView(qty);
+
+            EditText price = new EditText(this);
+            price.setHint("Price");
+            price.setInputType(InputType.TYPE_CLASS_NUMBER);
+            row.addView(price);
+
+            table.addView(row);
+        }
+
+        mainLayout.addView(table);
+    }
+
+    private TextView makeText(String txt) {
+        TextView t = new TextView(this);
+        t.setText(txt);
+        return t;
+    }
+}
