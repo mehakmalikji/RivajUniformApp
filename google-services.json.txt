@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "639808774709",
+    "firebase_url": "https://rivajuniformstock-e3dd0-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "rivajuniformstock-e3dd0",
+    "storage_bucket": "rivajuniformstock-e3dd0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:639808774709:android:d3353a359262cc9304877c",
+        "android_client_info": {
+          "package_name": "rivajuniform.apppha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1URjD3Vc3iBTBsiN6cwg84Nafs87VZcE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
